@@ -86,7 +86,6 @@ void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
     this->output_raw_[1] = count_l/10000; 
     this->output_raw_[2] = (count_l-count_l/10000*10000)/100; 
     this->output_raw_[3] = count_l%100; 
-
     this->output_raw_[4] = count_r/10000; 
     this->output_raw_[5] = (count_r-count_r/10000*10000)/100; 
     this->output_raw_[6] = count_r%100; 
