@@ -15,7 +15,7 @@ public:
 
     void send_rad_velo(float velo_l, float velo_r);
 
-    void read_rad_velo_pos(double &velo_l, double &velo_r);
+    void read_rad_velo_pos(double &velo_l, double &velo_r,double &pos_l, double &pos_r);
 
     
 

@@ -110,22 +110,20 @@ void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
 }
 
 
-void Stm32Comms::read_rad_velo_pos(double &velo_l, double &velo_r)
+void Stm32Comms::read_rad_velo_pos(double &velo_l, double &velo_r,double &pos_l, double &pos_r)
 {
     
     try
     {   
         //this->serial_port_.Read( this->input_raw_, this->input_array_length_, this->timeout_ms_ );
-        this->serial_port_.ReadLine(this->input_raw_, '\n', this->timeout_ms_);
-        if (this->input_raw_.size() ==13)//((this->input_raw_[22] == this->check_sum_(22,true))) 
+        this->serial_port_.ReadLine(this->input_raw_, '}', this->timeout_ms_);
+        if (this->input_raw_.size() ==15)//((this->input_raw_[22] == this->check_sum_(22,true))) 
         {
-            std::string delimiter = " ";
-            size_t del_pos = this->input_raw_.find(delimiter);
-            std::string token_1 = this->input_raw_.substr(0, del_pos);
-            std::string token_2 = this->input_raw_.substr(del_pos + delimiter.length(),input_raw_.size()-1);
-
-            velo_l = std::atoi(token_1.c_str());
-            velo_r = std::atoi(token_2.c_str());
+ 	    velo_l = input_raw_[2]*10000 + input_raw_[3]*100 + input_raw_[4];
+	    velo_r = input_raw_[5]*10000 + input_raw_[6]*100 + input_raw_[7];
+        pos_l = input_raw_[8]*10000 + input_raw_[9]*100 + input_raw_[10];
+	    pos_r = input_raw_[11]*10000 + input_raw_[12]*100 + input_raw_[13];
+        
         }
         else
         {
