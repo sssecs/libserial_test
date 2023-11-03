@@ -1,4 +1,5 @@
 #include "include/stm32_comms.h"
+#define PI           3.14159265358979323846
 
 
 unsigned char Stm32Comms::check_sum_(unsigned char Count_Number,bool recive_mode)
@@ -77,30 +78,20 @@ void Stm32Comms::disconnect()
 
 void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
 {
-    short temp;
-    this->output_raw_[0]=0x7B; //frame head 0x7B //帧头0X7B
-    this->output_raw_[1] = 0; //set aside //预留位
-    this->output_raw_[2] = 0; //set aside //预留位
+    int count_l,count_r;
+    count_l = (int)(velo_l/(2*PI)*60000/100);
+    count_r = (int)(velo_r/(2*PI)*60000/100);
 
-    //The target velocity of the X-axis of the robot
-    //机器人x轴的目标线速度
-    temp = velo_l*1000; //将浮点数放大一千倍，简化传输
-    this->output_raw_[4] = temp;     //取数据的低8位
-    this->output_raw_[3] = temp>>8;  //取数据的高8位
+    this->output_raw_[0]='{'; //frame head 0x7B //帧头0X7B
+    this->output_raw_[1] = count_l/10000; 
+    this->output_raw_[2] = (count_l-count_l/10000*10000)/100; 
+    this->output_raw_[3] = count_l%100; 
 
-    //The target velocity of the Y-axis of the robot
-    //机器人y轴的目标线速度
-    temp = velo_r*1000;
-    this->output_raw_[6] = temp;
-    this->output_raw_[5] = temp>>8;
+    this->output_raw_[4] = count_r/10000; 
+    this->output_raw_[5] = (count_r-count_r/10000*10000)/100; 
+    this->output_raw_[6] = count_r%100; 
 
-    //The target angular velocity of the robot's Z axis
-    //机器人z轴的目标角速度
-    this->output_raw_[8] = 0;
-    this->output_raw_[7] = 0;
-
-    this->output_raw_[9]=this->check_sum_(9,false); //For the BCC check bits, see the Check_Sum function //BCC校验位，规则参见Check_Sum函数
-    this->output_raw_[10]=0x7D; //frame tail 0x7D //帧尾0X7D
+    this->output_raw_[7]='}'; //frame tail 0x7D //帧尾0X7D
 
     int i;
     for (i=0;i<this->output_array_length_;i++)

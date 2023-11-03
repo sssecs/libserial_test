@@ -21,11 +21,11 @@ public:
 
 private:
 
-    static const int output_array_length_ = 11;
+    static const int output_array_length_ = 8;
     static const int input_array_length_ = 24;
     int16_t timeout_ms_;
     LibSerial::SerialPort serial_port_;
-    char output_raw_[output_array_length_];
+    unsigned char output_raw_[output_array_length_];
     //char input_raw_[input_array_length_];
     std::string input_raw_;
     float velo_l_;
