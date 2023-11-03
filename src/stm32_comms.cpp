@@ -101,14 +101,14 @@ void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
 }
 
 
-void Stm32Comms::read_rad_velo_pos(double &velo_l, double &velo_r,double &pos_l, double &pos_r)
+void Stm32Comms::read_rad_velo_pos(float &velo_l, float &velo_r,float &pos_l, float &pos_r)
 {
     
     try
     {   
-        //this->serial_port_.Read( this->input_raw_, this->input_array_length_, this->timeout_ms_ );
+        
         this->serial_port_.ReadLine(this->input_raw_, '}', this->timeout_ms_);
-        if (this->input_raw_.size() ==15)//((this->input_raw_[22] == this->check_sum_(22,true))) 
+        if (this->input_raw_.size() ==15)
         {
  	    velo_l = input_raw_[2]*10000 + input_raw_[3]*100 + input_raw_[4];
 	    velo_r = input_raw_[5]*10000 + input_raw_[6]*100 + input_raw_[7];

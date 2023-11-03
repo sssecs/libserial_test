@@ -2,8 +2,8 @@
 #include "include/stm32_comms.h"
 int main()
 {
-    double velol, velor;
-    double posl, posr;
+    float velol, velor;
+    float posl, posr;
     Stm32Comms comms;
     std::cout << "Runing" << std::endl;
     enum State {connect, read};
@@ -25,7 +25,7 @@ int main()
         case read:
             comms.read_rad_velo_pos(velol,velor,posl,posr);
             std::cout << velol << ';' << velor << " "<< posl << ";" <<posr << std::endl;
-            comms.send_rad_velo(-3.14,-3.14);
+            comms.send_rad_velo((float) -3.14,(float) -3.14);
             break;
         }
     }

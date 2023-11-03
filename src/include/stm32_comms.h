@@ -15,7 +15,7 @@ public:
 
     void send_rad_velo(float velo_l, float velo_r);
 
-    void read_rad_velo_pos(double &velo_l, double &velo_r,double &pos_l, double &pos_r);
+    void read_rad_velo_pos(float &velo_l, float &velo_r,float &pos_l, float &pos_r);
 
     
 
@@ -25,7 +25,7 @@ private:
     static const int input_array_length_ = 24;
     int16_t timeout_ms_;
     LibSerial::SerialPort serial_port_;
-    unsigned char output_raw_[output_array_length_];
+    char output_raw_[output_array_length_];
     //char input_raw_[input_array_length_];
     std::string input_raw_;
     float velo_l_;
