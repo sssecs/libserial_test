@@ -2,38 +2,6 @@
 #define PI           3.14159265358979323846
 
 
-unsigned char Stm32Comms::check_sum_(unsigned char Count_Number,bool recive_mode)
-{
-  unsigned char check_sum=0,k;
-  
-  if(recive_mode) //Receive data mode //接收数据模式
-  {
-   for(k=0;k<Count_Number;k++)
-    {
-     check_sum=check_sum^this->input_raw_[k]; //By bit or by bit //按位异或
-     }
-  }
-  if(not recive_mode) //Send data mode //发送数据模式
-  {
-   for(k=0;k<Count_Number;k++)
-    {
-     check_sum=check_sum^this->output_raw_[k]; //By bit or by bit //按位异或
-     }
-  }
-  return check_sum; //Returns the bitwise XOR result //返回按位异或结果
-}
-
-
-float Stm32Comms::data_stitch_2_(uint8_t Data_High,uint8_t Data_Low)
-{
-  float data_return;
-  short transition_16;
-  transition_16 = 0;
-  transition_16 |=  Data_High<<8;  //Get the high 8 bits of data   //获取数据的高8位
-  transition_16 |=  Data_Low;      //Get the lowest 8 bits of data //获取数据的低8位
-  data_return   =  (transition_16 / 1000)+(transition_16 % 1000)*0.001; // The speed unit is changed from mm/s to m/s //速度单位从mm/s转换为m/s
-  return data_return;
-}
 
 void Stm32Comms::connect(const std::string &serial_device, int16_t timeout_ms)
 {
@@ -79,8 +47,8 @@ void Stm32Comms::disconnect()
 void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
 {
     int count_l,count_r;
-    count_l = (int)(velo_l/(2*PI)*60000/100);
-    count_r = (int)(velo_r/(2*PI)*60000/100);
+    count_l = (int)(velo_l/(2*PI)*this->encoder_counts_pre_round_/this->ticks_pre_sec_);
+    count_r = (int)(velo_r/(2*PI)*this->encoder_counts_pre_round_/this->ticks_pre_sec_);
 
     this->output_raw_[0]='{'; //frame head 0x7B //帧头0X7B
     this->output_raw_[1] = count_l/10000; 
@@ -92,8 +60,7 @@ void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
 
     this->output_raw_[7]='}'; //frame tail 0x7D //帧尾0X7D
 
-    int i;
-    for (i=0;i<this->output_array_length_;i++)
+    for (int i=0;i<this->output_array_length_;i++)
     {
         this->serial_port_.WriteByte(this->output_raw_[i]);
     }
@@ -102,29 +69,60 @@ void Stm32Comms::send_rad_velo(float velo_l, float velo_r)
 
 void Stm32Comms::read_rad_velo_pos(float &velo_l, float &velo_r,float &pos_l, float &pos_r)
 {
-    
+    int velo_l_raw, velo_r_raw, pos_l_raw, pos_r_raw;
     try
     {   
         
         this->serial_port_.ReadLine(this->input_raw_, '}', this->timeout_ms_);
         if (this->input_raw_.size() ==15)
         {
- 	    velo_l = input_raw_[2]*10000 + input_raw_[3]*100 + input_raw_[4];
-	    velo_r = input_raw_[5]*10000 + input_raw_[6]*100 + input_raw_[7];
-        pos_l = input_raw_[8]*10000 + input_raw_[9]*100 + input_raw_[10];
-	    pos_r = input_raw_[11]*10000 + input_raw_[12]*100 + input_raw_[13];
+ 	    velo_l_raw = input_raw_[2]*10000 + input_raw_[3]*100 + input_raw_[4];
+	    velo_r_raw = input_raw_[5]*10000 + input_raw_[6]*100 + input_raw_[7];
+
+        pos_l_raw = input_raw_[8]*10000 + input_raw_[9]*100 + input_raw_[10];
+	    pos_r_raw = input_raw_[11]*10000 + input_raw_[12]*100 + input_raw_[13];
         
         }
-        else
-        {
-            velo_l = -999;
-            velo_r = -999;
+        velo_l = (float)velo_l_raw / this->encoder_counts_pre_round_ *2*PI*this->ticks_pre_sec_;
+        velo_r = (float)velo_r_raw / this->encoder_counts_pre_round_ *2*PI*this->ticks_pre_sec_;
 
+        if (abs(this->pos_l_history_) > this->encoder_counts_pre_round_ || abs(this->pos_r_history_) > this->encoder_counts_pre_round_)
+        {
+            this->pos_l_history_ = pos_l_raw;
+            this->pos_r_history_ = pos_r_raw;
         }
+
+
+        if ( (pos_l_raw-this->pos_l_history_) < -0.8*this->encoder_counts_pre_round_ )
+        {
+            this->wheel_l_round_num_ += 1;
+        }
+        else if ( (pos_l_raw-this->pos_l_history_) > 0.8*this->encoder_counts_pre_round_ )
+        {
+            this->wheel_l_round_num_ -= 1;
+        }
+
+
+        if ( (pos_r_raw-this->pos_r_history_) < -0.8*this->encoder_counts_pre_round_ )
+        {
+            this->wheel_r_round_num_ += 1;
+        }
+        else if ( (pos_r_raw-this->pos_r_history_) > 0.8*this->encoder_counts_pre_round_ )
+        {
+            this->wheel_r_round_num_ -= 1;
+        }
+
+        pos_l = ((float)pos_l_raw + (float)this->wheel_l_round_num_*this->encoder_counts_pre_round_) / this->encoder_counts_pre_round_ *2*PI;
+        pos_r = ((float)pos_r_raw + (float)this->wheel_r_round_num_*this->encoder_counts_pre_round_) / this->encoder_counts_pre_round_ *2*PI;
+
+        this->pos_l_history_ = pos_l_raw;
+        this->pos_r_history_ = pos_r_raw;
 
     }
     catch (const LibSerial::ReadTimeout&)
     {
         std::cerr << "The Read() call timed out waiting for additional data." << std::endl ;
     }
+
+
 }

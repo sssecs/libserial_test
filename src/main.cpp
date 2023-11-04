@@ -24,7 +24,7 @@ int main()
         
         case read:
             comms.read_rad_velo_pos(velol,velor,posl,posr);
-            std::cout << velol << ';' << velor << " "<< posl << ";" <<posr << std::endl;
+            std::cout << velol << ";\t\t" << velor << "\t\t "<< posl << ";\t\t" <<posr << std::endl;
             comms.send_rad_velo((float) -3.14,(float) 3.14);
             break;
         }

@@ -23,16 +23,22 @@ private:
 
     static const int output_array_length_ = 8;
     static const int input_array_length_ = 24;
+
+    const float encoder_counts_pre_round_ = 60000;
+    const float ticks_pre_sec_ = 100;
+
+
+
     int16_t timeout_ms_;
     LibSerial::SerialPort serial_port_;
     char output_raw_[output_array_length_];
-    //char input_raw_[input_array_length_];
     std::string input_raw_;
-    float velo_l_;
-    float velo_r_;
 
-    float data_stitch_2_(uint8_t Data_High,uint8_t Data_Low);
-    unsigned char check_sum_(unsigned char Count_Number,bool recive_mode);
+    int wheel_l_round_num_ = 0;
+    int wheel_r_round_num_ = 0;
+
+    int pos_l_history_ = encoder_counts_pre_round_ + 1;
+    int pos_r_history_ = encoder_counts_pre_round_ + 1;
     
 
 };
